@@ -1,0 +1,129 @@
+                      (           sd.asm):00001                 org     $8000
+8000                  (           sd.asm):00002         start
+                      (           sd.asm):00003         * patch DSKINI for SD
+                      (           sd.asm):00004         
+                      (           sd.asm):00005         * Change the loop constructs in DSKINI to end at sector 9 instead of 18.
+                      (           sd.asm):00006         
+8000 8609             (           sd.asm):00007                 lda     #$09
+8002 B7D5C5           (           sd.asm):00008                 sta     $d5c5
+8005 B7D5C9           (           sd.asm):00009                 sta     $d5c9
+8008 B7D5D2           (           sd.asm):00010                 sta     $d5d2
+800B B7D67B           (           sd.asm):00011                 sta     $d67b
+800E B7D6BC           (           sd.asm):00012                 sta     $d6bc
+                      (           sd.asm):00013         
+                      (           sd.asm):00014         * Change track start from 32 bytes of 0x4E to 32 bytes of 0xFF
+                      (           sd.asm):00015         
+8011 86FF             (           sd.asm):00016                 lda     #$ff
+8013 B7D696           (           sd.asm):00017                 sta     $d696
+                      (           sd.asm):00018         
+                      (           sd.asm):00019         * Change track end from 200 bytes of 0x4E to 200 bytes of 0xFF
+                      (           sd.asm):00020         
+8016 B7D6C1           (           sd.asm):00021                 sta     $d6c1
+                      (           sd.asm):00022         
+                      (           sd.asm):00023         * New track table ends with 8 blocks not 9.
+                      (           sd.asm):00024         
+8019 8608             (           sd.asm):00025                 lda     #$08
+801B B7D6B5           (           sd.asm):00026                 sta     $d6b5
+                      (           sd.asm):00027         
+                      (           sd.asm):00028         * Insert the address of the new track table into DSKINI.
+                      (           sd.asm):00029         
+801E CCFE5E           (           sd.asm):00030                 ldd     #nt
+8021 FDD6A4           (           sd.asm):00031                 std     $d6a4
+                      (           sd.asm):00032         
+                      (           sd.asm):00033         * Change program to jump to our new DSKINI write routine.
+                      (           sd.asm):00034         
+8024 867E             (           sd.asm):00035                 lda     #$7e
+8026 B7D646           (           sd.asm):00036                 sta     $d646
+8029 CCFE20           (           sd.asm):00037                 ldd     #write
+802C FDD647           (           sd.asm):00038                 std     $d647
+                      (           sd.asm):00039         
+                      (           sd.asm):00040         * Now we patch DSKCON.
+                      (           sd.asm):00041         
+                      (           sd.asm):00042         * OR in single density (instead of double density) mode
+                      (           sd.asm):00043         
+                      (           sd.asm):00044         * patch DSKCON for SD
+802F 8600             (           sd.asm):00045                 lda     #$0
+8031 B7D775           (           sd.asm):00046                 sta     $d775
+                      (           sd.asm):00047         
+                      (           sd.asm):00048         * Don’t turn on halt mode
+                      (           sd.asm):00049         
+8034 8600             (           sd.asm):00050                 lda     #$00
+8036 B7D840           (           sd.asm):00051                 sta     $d840
+                      (           sd.asm):00052         
+                      (           sd.asm):00053         * Patch DSKCON to jump to new write and read loops
+                      (           sd.asm):00054         
+8039 867E             (           sd.asm):00055                 lda     #$7e
+803B B7D86B           (           sd.asm):00056                 sta     $d86b
+803E B7D881           (           sd.asm):00057                 sta     $d881
+8041 CCFE3C           (           sd.asm):00058                 ldd     #wdsk
+8044 FDD86C           (           sd.asm):00059                 std     $d86c
+8047 CCFE4D           (           sd.asm):00060                 ldd     #rdsk
+804A FDD882           (           sd.asm):00061                 std     $d882
+                      (           sd.asm):00062         
+                      (           sd.asm):00063         * Set DRGRAM and DSKREG to single density
+804D 8600             (           sd.asm):00064                 lda #0
+804F B70986           (           sd.asm):00065                 sta $0986
+8052 B7FF40           (           sd.asm):00066                 sta $ff40
+                      (           sd.asm):00067                 
+                      (           sd.asm):00068         * patch out dskini verify
+                      (           sd.asm):00069         *       lda #$7e
+                      (           sd.asm):00070         *       sta $d662
+                      (           sd.asm):00071         *       ldd #$d2cd
+                      (           sd.asm):00072         *       std $d688
+                      (           sd.asm):00073         
+8055 39               (           sd.asm):00074                 rts
+                      (           sd.asm):00075                 
+                      (           sd.asm):00076         * New writing routine for DSKINI
+                      (           sd.asm):00077             org $fe20
+                      (           sd.asm):00078         
+FE20 844F             (           sd.asm):00079         write   anda    #$4f
+FE22 B7FF40           (           sd.asm):00080                 sta     $ff40   Turn off halting, double density and NMI
+FE25 B70986           (           sd.asm):00081             sta $0986   copy to DRGRAM
+FE28 E680             (           sd.asm):00082         w0      ldb     ,x+     Read byte from track buffer
+FE2A B6FF48           (           sd.asm):00083         w1      lda     $ff48   Get FDC status
+FE2D 46               (           sd.asm):00084                 rora            Roll busy bit into carry flag
+FE2E 2409             (           sd.asm):00085                 bcc     w3      If not busy, then branch out of loop
+FE30 46               (           sd.asm):00086                 rora            Roll data request bit into carry flag
+FE31 2502             (           sd.asm):00087                 bcs     w2      If ready for data, branch to write instruction
+FE33 20F5             (           sd.asm):00088                 bra     w1      Branch back to test status again.
+FE35 E7A4             (           sd.asm):00089         w2      stb     ,y      Write data to FDC
+FE37 20EF             (           sd.asm):00090                 bra     w0      Branch back to get new byte
+FE39 7ED64F           (           sd.asm):00091         w3      jmp     $d64f done, jmp back to DSKINI
+                      (           sd.asm):00092         
+                      (           sd.asm):00093         * New writing routine for DSKCON
+                      (           sd.asm):00094         
+FE3C E680             (           sd.asm):00095         wdsk    ldb     ,x+     Load byte from transfer buffer
+FE3E F7FF4B           (           sd.asm):00096                 stb     $ff4b   Write it to FDC
+FE41 A6C4             (           sd.asm):00097         wd1     lda     ,u      Get status
+FE43 46               (           sd.asm):00098                 rora            Roll busy bit into carry flag
+FE44 1024DA43         (           sd.asm):00099                 lbcc    $d88b   If not busy, branch to end loop
+FE48 46               (           sd.asm):00100                 rora            Roll data request bit into carry flag
+FE49 25F1             (           sd.asm):00101                 bcs     wdsk    If data requested, get new byte from transfer buffer
+FE4B 20F4             (           sd.asm):00102                 bra     wd1 Brach to check status again
+                      (           sd.asm):00103         
+                      (           sd.asm):00104         * New reading routine for DSKCON
+                      (           sd.asm):00105         
+FE4D F6FF4B           (           sd.asm):00106         rdsk    ldb     $ff4b   Load byte from FDC
+FE50 E780             (           sd.asm):00107                 stb     ,x+     Store byte to transfer buffer
+FE52 A6C4             (           sd.asm):00108         rd1     lda     ,u      Get status
+FE54 46               (           sd.asm):00109                 rora            Roll busy bit into carry flag
+FE55 1024DA32         (           sd.asm):00110                 lbcc    $d88b   If not busy, branch to end loop
+FE59 46               (           sd.asm):00111                 rora            Roll data request bit into carry flag
+FE5A 25F1             (           sd.asm):00112                 bcs     rdsk    If data requested, get new byte from transfer buffer
+FE5C 20F4             (           sd.asm):00113                 bra     rd1     Brach to check status again
+                      (           sd.asm):00114         
+                      (           sd.asm):00115         * New disk format table
+                      (           sd.asm):00116         
+FE5E 0300             (           sd.asm):00117         nt      fcb 3,$0        Sync field
+FE60 0300             (           sd.asm):00118                 fcb 3,$0
+FE62 01FE             (           sd.asm):00119                 fcb 1,$FE       ID Address Mark
+                      (           sd.asm):00120         * Track, side and sector numbers are inserted here
+FE64 0101             (           sd.asm):00121                 fcb 1,1 Sector Size (256 byte sectors)
+FE66 01F7             (           sd.asm):00122                 fcb 1,$f7       CRC Request
+FE68 0BFF             (           sd.asm):00123                 fcb 11,$ff      GAP II (Post-ID Gap)
+FE6A 0600             (           sd.asm):00124                 fcb 6,$0        Sync Field
+FE6C 01FB             (           sd.asm):00125                 fcb 1,$fb       Data Address Mark (AM2)
+FE6E 00FF             (           sd.asm):00126                 fcb 0,$ff       Data Field (256 bytes)
+FE70 01F7             (           sd.asm):00127                 fcb 1,$f7       CRC Request
+FE72 1BFF             (           sd.asm):00128                 fcb 27,$ff      Gap III (Post Gap Data)
+                      (           sd.asm):00129                 end start
