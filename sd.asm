@@ -91,7 +91,7 @@ w3	jmp	$d64f done, jmp back to DSKINI
 * New writing routine for DSKCON
 
 wdsk	ldb	,x+	Load byte from transfer buffer
-	stb	$ff4b	Write it to FDC
+	stb	3,u	Write it to FDC
 wd1	lda	,u	Get status
 	rora		Roll busy bit into carry flag
 	lbcc	$d88b	If not busy, branch to end loop
@@ -101,7 +101,7 @@ wd1	lda	,u	Get status
 
 * New reading routine for DSKCON
 
-rdsk	ldb	$ff4b	Load byte from FDC
+rdsk	ldb	3,u	Load byte from FDC
 	stb	,x+	Store byte to transfer buffer
 rd1	lda	,u	Get status
 	rora		Roll busy bit into carry flag
