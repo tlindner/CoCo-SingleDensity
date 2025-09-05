@@ -101,28 +101,27 @@ FE4A 20F4             (           sd.asm):00100                 bra     wd1 Brac
                       (           sd.asm):00101         
                       (           sd.asm):00102         * New reading routine for DSKCON
                       (           sd.asm):00103         
-                      (           sd.asm):00104         *rdsk   ldb     $ff4b   Load byte from FDC
-FE4C E643             (           sd.asm):00105         rdsk    ldb     3,u     Load byte from FDC
-FE4E E780             (           sd.asm):00106                 stb     ,x+     Store byte to transfer buffer
-FE50 A6C4             (           sd.asm):00107         rd1     lda     ,u      Get status
-FE52 46               (           sd.asm):00108                 rora            Roll busy bit into carry flag
-FE53 1024DA34         (           sd.asm):00109                 lbcc    $d88b   If not busy, branch to end loop
-FE57 46               (           sd.asm):00110                 rora            Roll data request bit into carry flag
-FE58 25F2             (           sd.asm):00111                 bcs     rdsk    If data requested, get new byte from transfer buffer
-FE5A 20F4             (           sd.asm):00112                 bra     rd1     Brach to check status again
-                      (           sd.asm):00113         
-                      (           sd.asm):00114         * New disk format table
-                      (           sd.asm):00115         
-FE5C 0300             (           sd.asm):00116         nt      fcb 3,$0        Sync field
-FE5E 0300             (           sd.asm):00117                 fcb 3,$0
-FE60 01FE             (           sd.asm):00118                 fcb 1,$FE       ID Address Mark
-                      (           sd.asm):00119         * Track, side and sector numbers are inserted here
-FE62 0101             (           sd.asm):00120                 fcb 1,1 Sector Size (256 byte sectors)
-FE64 01F7             (           sd.asm):00121                 fcb 1,$f7       CRC Request
-FE66 0BFF             (           sd.asm):00122                 fcb 11,$ff      GAP II (Post-ID Gap)
-FE68 0600             (           sd.asm):00123                 fcb 6,$0        Sync Field
-FE6A 01FB             (           sd.asm):00124                 fcb 1,$fb       Data Address Mark (AM2)
-FE6C 00FF             (           sd.asm):00125                 fcb 0,$ff       Data Field (256 bytes)
-FE6E 01F7             (           sd.asm):00126                 fcb 1,$f7       CRC Request
-FE70 1BFF             (           sd.asm):00127                 fcb 27,$ff      Gap III (Post Gap Data)
-                      (           sd.asm):00128                 end start
+FE4C E643             (           sd.asm):00104         rdsk    ldb     3,u     Load byte from FDC
+FE4E E780             (           sd.asm):00105                 stb     ,x+     Store byte to transfer buffer
+FE50 A6C4             (           sd.asm):00106         rd1     lda     ,u      Get status
+FE52 46               (           sd.asm):00107                 rora            Roll busy bit into carry flag
+FE53 1024DA34         (           sd.asm):00108                 lbcc    $d88b   If not busy, branch to end loop
+FE57 46               (           sd.asm):00109                 rora            Roll data request bit into carry flag
+FE58 25F2             (           sd.asm):00110                 bcs     rdsk    If data requested, get new byte from transfer buffer
+FE5A 20F4             (           sd.asm):00111                 bra     rd1     Brach to check status again
+                      (           sd.asm):00112         
+                      (           sd.asm):00113         * New disk format table
+                      (           sd.asm):00114         
+FE5C 0300             (           sd.asm):00115         nt      fcb 3,$0        Sync field
+FE5E 0300             (           sd.asm):00116                 fcb 3,$0
+FE60 01FE             (           sd.asm):00117                 fcb 1,$FE       ID Address Mark
+                      (           sd.asm):00118         * Track, side and sector numbers are inserted here
+FE62 0101             (           sd.asm):00119                 fcb 1,1 Sector Size (256 byte sectors)
+FE64 01F7             (           sd.asm):00120                 fcb 1,$f7       CRC Request
+FE66 0BFF             (           sd.asm):00121                 fcb 11,$ff      GAP II (Post-ID Gap)
+FE68 0600             (           sd.asm):00122                 fcb 6,$0        Sync Field
+FE6A 01FB             (           sd.asm):00123                 fcb 1,$fb       Data Address Mark (AM2)
+FE6C 00FF             (           sd.asm):00124                 fcb 0,$ff       Data Field (256 bytes)
+FE6E 01F7             (           sd.asm):00125                 fcb 1,$f7       CRC Request
+FE70 1BFF             (           sd.asm):00126                 fcb 27,$ff      Gap III (Post Gap Data)
+                      (           sd.asm):00127                 end start
